@@ -11,6 +11,15 @@ const validQuantity = (value: unknown): value is number =>
   typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 const clampQuantity = (value: number) => Math.min(MAX_LINE_QUANTITY, value);
 
+export type CartAdditionStatus = 'added' | 'invalid-size' | 'cart-full' | 'quantity-limit';
+/** Resultado puro para que a interface nunca anuncie uma inclusão que não ocorreu. */
+export function getCartAdditionStatus(cart: readonly CartLine[], product: CatalogItem, size: string): CartAdditionStatus {
+  if (!product.sizes.includes(size)) return 'invalid-size';
+  const existing = cart.find((line) => line.productId === product.id && line.size === size);
+  if (existing) return existing.quantity >= MAX_LINE_QUANTITY ? 'quantity-limit' : 'added';
+  return cart.length >= MAX_CART_LINES ? 'cart-full' : 'added';
+}
+
 export function restoreSelection(raw: string | null, catalog: readonly CatalogItem[]): { favorites: string[]; cart: CartLine[] } {
   if (!raw || raw.length > MAX_STORED_CHARS) return { favorites: [], cart: [] };
   try {

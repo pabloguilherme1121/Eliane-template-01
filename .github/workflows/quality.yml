@@ -31,3 +31,5 @@ jobs:
       - run: pnpm check
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm exec expo export --platform web --output-dir dist-web-check
+      - run: node --experimental-strip-types scripts/verify-web-export.mjs dist-web-check

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { restoreSelection, addCartLine, setCartLineQuantity, calculateSubtotal, buildOrderMessage, MAX_LINE_QUANTITY } from '../lib/cart-logic.ts';
+import { restoreSelection, addCartLine, setCartLineQuantity, calculateSubtotal, buildOrderMessage, getCartAdditionStatus, MAX_LINE_QUANTITY } from '../lib/cart-logic.ts';
 
 const inventory = [
   { id: 'vestido-viva', name: 'Vestido Viva', sizes: ['38', '40'], price: 189.9 },
@@ -61,4 +61,15 @@ test('limita linhas diferentes da sacola restaurada sem descartar quantidades re
   assert.equal(state.cart.length,100);
   assert.equal(state.cart[0].quantity,3);
   assert.equal(addCartLine(state.cart,largeCatalog[0],'120').length,100);
+});
+
+
+test('informação de limite de sacola é fiel ao resultado da inclusão', () => {
+  assert.equal(getCartAdditionStatus([],inventory[0],'38'),'added');
+  assert.equal(getCartAdditionStatus([],inventory[0],'inexistente'),'invalid-size');
+  const atLineLimit=[{productId:'vestido-viva',size:'38',quantity:MAX_LINE_QUANTITY}];
+  assert.equal(getCartAdditionStatus(atLineLimit,inventory[0],'38'),'quantity-limit');
+  assert.equal(getCartAdditionStatus(atLineLimit,inventory[0],'40'),'added');
+  const atCartLimit=Array.from({length:100}, (_,i)=>({productId:'p'+i,size:'M',quantity:1}));
+  assert.equal(getCartAdditionStatus(atCartLimit,inventory[0],'38'),'cart-full');
 });

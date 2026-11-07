@@ -1,9 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname } from "expo-router";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { products, type Product } from "@/lib/catalog";
-import { addCartLine, calculateSubtotal, restoreSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
+import { addCartLine, calculateSubtotal, getCartAdditionStatus, restoreSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
 
 type StoreContextValue = {
   hydrated: boolean;
@@ -28,6 +28,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const cartRef = useRef<CartLine[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (!raw) return;
         const saved = restoreSelection(raw, products);
         setFavorites(saved.favorites);
+        cartRef.current = saved.cart;
         setCart(saved.cart);
       })
       .catch(() => setNotice("Não foi possível restaurar sua sacola agora."))
@@ -56,6 +58,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [notice, pathname]);
 
   const toggleFavorite = (productId: string) => {
+    if (!hydrated) { setNotice("Aguarde o carregamento da sua seleção."); return; }
     if (!products.some((product) => product.id === productId)) return;
     const removing = favorites.includes(productId);
     setFavorites((current) => current.includes(productId)
@@ -65,20 +68,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const addToCart = (product: Product, size: string) => {
-    if (!products.some((item) => item.id === product.id) || !product.sizes.includes(size)) {
-      setNotice("Selecione um tamanho disponível.");
+    if (!hydrated) { setNotice("Aguarde o carregamento da sua seleção."); return; }
+    const catalogProduct = products.find((item) => item.id === product.id);
+    if (!catalogProduct) { setNotice("Peça indisponível no catálogo."); return; }
+    const status = getCartAdditionStatus(cartRef.current, catalogProduct, size);
+    if (status !== "added") {
+      const messages = {
+        "invalid-size": "Selecione um tamanho disponível.",
+        "cart-full": "Sua sacola atingiu o limite de itens desta demonstração.",
+        "quantity-limit": "Você já selecionou a quantidade máxima deste tamanho.",
+      } as const;
+      setNotice(messages[status]);
       return;
     }
-    setCart((current) => addCartLine(current, product, size));
-    setNotice(`${product.name} foi adicionado à sacola (sujeito à disponibilidade).`);
+    const next = addCartLine(cartRef.current, catalogProduct, size);
+    cartRef.current = next;
+    setCart(next);
+    setNotice(`${catalogProduct.name} foi adicionado à sacola (sujeito à disponibilidade).`);
   };
 
   const updateQuantity = (productId: string, size: string, quantity: number) => {
-    setCart((current) => setCartLineQuantity(current, productId, size, quantity));
+    if (!hydrated) return;
+    const next = setCartLineQuantity(cartRef.current, productId, size, quantity);
+    cartRef.current = next;
+    setCart(next);
   };
 
   const removeFromCart = (productId: string, size: string) => {
-    setCart((current) => current.filter((line) => !(line.productId === productId && line.size === size)));
+    if (!hydrated) return;
+    const next = cartRef.current.filter((line) => !(line.productId === productId && line.size === size));
+    cartRef.current = next;
+    setCart(next);
     setNotice("Item removido da sacola.");
   };
 

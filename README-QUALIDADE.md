@@ -75,3 +75,17 @@ Se `pnpm` não estiver habilitado, execute `corepack enable` antes.
 - Workflow GitHub Actions acrescentado para testes de lógica, TypeScript, lint e testes da aplicação.
 - Documentação de publicação segura e `.env.example` sem credenciais.
 - Resultado local de `npm run test:logic`: 21 testes aprovados. Instalação/build Expo ainda não executados neste ambiente.
+
+## Atualização V5 (07/11/2026)
+
+Esta rodada melhora a usabilidade sem mudar preços, pedidos demonstrativos ou integrações comerciais.
+
+- **Grades responsivas:** catálogo e favoritos usam duas colunas em celulares, três em tablets e quatro em telas maiores, respeitando a largura máxima do conteúdo; a função pura é testada em 280, 320, 390, 640, 768, 960 e 1440 px.
+- **Detalhes:** a altura da imagem principal agora varia com a largura do dispositivo e tem limite de 520 px no desktop; a fotografia de cada peça continua pendente, sinalizada por placeholder.
+- **Sacola:** a interface não afirma mais ter adicionado um produto se a seleção é inválida ou se o limite técnico foi atingido. Atualizações rápidas usam uma referência sincronizada para evitar perda de quantidades entre toques.
+- **Inicialização:** ações de favoritos e sacola são protegidas até a recuperação do armazenamento local terminar, evitando que uma seleção seja sobrescrita.
+- **Testes de regressão:** 3 cenários novos verificam grade, imagem responsiva e mensagens ligadas aos limites de itens.
+
+**Validação:** GitHub Actions executa os testes de lógica e a suíte com TypeScript, lint e Vitest. Na primeira execução de V5, os 24 testes de lógica e as etapas TypeScript/lint passaram; verificar o status do mesmo commit no GitHub antes de integrar.
+
+**Pendente:** testes visuais reais no navegador e Android físico, fotografias autorizadas, dados comerciais verificados e autenticação de qualquer painel destinado à operação real. Publicar o código no GitHub não constitui publicação da loja.
