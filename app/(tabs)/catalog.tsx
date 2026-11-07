@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/product-card";
 import { colors } from "@/constants/tokens";
 import { categories, products } from "@/lib/catalog";
-import { catalogCardWidth } from "@/lib/layout";
+import { productGridLayout } from "@/lib/layout";
 import { matchesCatalogQuery } from "@/lib/catalog-search";
 import { useStore } from "@/lib/store";
 
@@ -26,7 +26,7 @@ export default function CatalogScreen() {
 function CatalogContent({ initialCategory }: { initialCategory: string }) {
   const searchRef = useRef<TextInput>(null);
   const { width: screenWidth } = useWindowDimensions();
-  const cardWidth = catalogCardWidth(screenWidth);
+  const { columns, cardWidth } = productGridLayout(screenWidth);
   const { cartCount, isFavorite, toggleFavorite } = useStore();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
@@ -48,7 +48,7 @@ function CatalogContent({ initialCategory }: { initialCategory: string }) {
     return [...result].sort((a, b) => sortMode === "price-asc" ? a.price - b.price : sortMode === "price-desc" ? b.price - a.price : 0);
   }, [category, priceFilter, query, selectedColor, selectedSize, sortMode]);
 
-  const rows = Array.from({ length: Math.ceil(filtered.length / 2) }, (_, index) => filtered.slice(index * 2, index * 2 + 2));
+  const rows = Array.from({ length: Math.ceil(filtered.length / columns) }, (_, index) => filtered.slice(index * columns, index * columns + columns));
   const activeFilterCount = [category !== "Todos", priceFilter !== "Todos", selectedColor !== "Todos", selectedSize !== "Todos"].filter(Boolean).length;
   const resetFilters = () => {
     setQuery("");
@@ -77,7 +77,7 @@ function CatalogContent({ initialCategory }: { initialCategory: string }) {
           <Pressable onPress={resetFilters} style={styles.clearFilters} accessibilityRole="button"><Text style={styles.clearFiltersText}>Limpar todos os filtros</Text></Pressable>
         </View>}
         <View style={styles.resultRow}><Text style={styles.resultCount} accessibilityLiveRegion="polite">{filtered.length} {filtered.length === 1 ? "peça" : "peças"}</Text><Pressable style={styles.sort} onPress={() => setSortMode((current) => current === "relevance" ? "price-asc" : current === "price-asc" ? "price-desc" : "relevance")} accessibilityRole="button" accessibilityLabel="Alterar ordenação"><Ionicons name="swap-vertical-outline" size={16} color={colors.ink} /><Text style={styles.sortText}>{sortMode === "relevance" ? "Relevância" : sortMode === "price-asc" ? "Menor preço" : "Maior preço"}</Text></Pressable></View>
-        {filtered.length === 0 ? <EmptyState icon="search-outline" title="Nada por aqui ainda" body="Tente outra busca ou ajuste seus filtros." action="Limpar filtros" onAction={resetFilters} /> : <View style={styles.grid}>{rows.map((row, index) => <View style={styles.gridRow} key={`row-${index}`}>{row.map((product) => <ProductCard key={product.id} width={cardWidth} product={product} favorite={isFavorite(product.id)} onToggleFavorite={() => toggleFavorite(product.id)} onPress={() => router.push({ pathname: "/product/[id]", params: { id: product.id } })} />)}{row.length === 1 && <View style={{ width: cardWidth }} />}</View>)}</View>}
+        {filtered.length === 0 ? <EmptyState icon="search-outline" title="Nada por aqui ainda" body="Tente outra busca ou ajuste seus filtros." action="Limpar filtros" onAction={resetFilters} /> : <View style={styles.grid}>{rows.map((row, index) => <View style={styles.gridRow} key={`row-${index}`}>{row.map((product) => <ProductCard key={product.id} width={cardWidth} product={product} favorite={isFavorite(product.id)} onToggleFavorite={() => toggleFavorite(product.id)} onPress={() => router.push({ pathname: "/product/[id]", params: { id: product.id } })} />)}</View>)}</View>}
       </ScrollView>
     </SafeAreaView>
   );
