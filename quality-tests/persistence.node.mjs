@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createLatestWriteQueue, readStoredSelection, parsePersistedSelection } from "../lib/persistence.ts";
+import { createLatestWriteQueue, readStoredSelection } from "../lib/persistence.ts";
+import { parsePersistedSelection } from "../lib/cart-logic.ts";
 
 test("gravações concorrentes são serializadas e a seleção mais recente prevalece", async () => {
   const writes = [];
