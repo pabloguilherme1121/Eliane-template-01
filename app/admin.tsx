@@ -98,7 +98,7 @@ export default function AdminScreen() {
   const advanceOrder = (id: string) => {
     setOrders((current) => current.map((order) => {
       if (order.id !== id) return order;
-      const index = orderStatuses.indexOf(order.status);
+      const index = orderStatuses.findIndex((candidate) => candidate === order.status);
       return { ...order, status: orderStatuses[Math.min(Math.max(index + 1, 0), orderStatuses.length - 1)] };
     }));
     flash("Status do pedido atualizado.");
