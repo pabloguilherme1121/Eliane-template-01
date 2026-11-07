@@ -1,4 +1,4 @@
-import { MAX_STORED_CHARS, restoreSelection, type CatalogItem } from "./cart-logic";
+import { MAX_STORED_CHARS, restoreSelection, type CatalogItem } from "./cart-logic.ts";
 
 /**
  * Distingue ausência legítima de dados de armazenamento corrompido.
