@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { products, type Product } from "@/lib/catalog";
 import { addCartLine, calculateSubtotal, getCartAdditionStatus, parsePersistedSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
 import { createLatestWriteQueue, readStoredSelection } from "@/lib/persistence";
+import { toggleFavoriteSelection } from "@/lib/favorites-logic";
 
 type StoreContextValue = {
   hydrated: boolean;
@@ -31,13 +32,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const favoritesRef = useRef<string[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const cartRef = useRef<CartLine[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [storageWarning, setStorageWarning] = useState<string | null>(null);
   const [persistSelection] = useState(() => createLatestWriteQueue(
     (snapshot) => AsyncStorage.setItem(STORAGE_KEY, snapshot),
-    () => setNotice("Não foi possível salvar sua seleção neste momento."),
+    () => setStorageWarning("Não foi possível salvar suas alterações neste dispositivo. Ao alterar a seleção novamente, o aplicativo tentará salvar."),
+    () => setStorageWarning(null),
   ));
 
   useEffect(() => {
@@ -48,6 +51,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ).then((result) => {
       if (cancelled) return;
       if (result.ok) {
+        favoritesRef.current = result.selection.favorites;
         setFavorites(result.selection.favorites);
         cartRef.current = result.selection.cart;
         setCart(result.selection.cart);
@@ -74,11 +78,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const toggleFavorite = (productId: string) => {
     if (!hydrated) { setNotice("Aguarde o carregamento da sua seleção."); return; }
     if (!products.some((product) => product.id === productId)) return;
-    const removing = favorites.includes(productId);
-    setFavorites((current) => current.includes(productId)
-      ? current.filter((id) => id !== productId)
-      : [...current, productId]);
-    setNotice(removing ? "Removido dos favoritos." : "Guardado nos favoritos.");
+    const result = toggleFavoriteSelection(favoritesRef.current, productId);
+    favoritesRef.current = result.favorites;
+    setFavorites(result.favorites);
+    setNotice(result.added ? "Guardado nos favoritos." : "Removido dos favoritos.");
   };
 
   const addToCart = (product: Product, size: string) => {
