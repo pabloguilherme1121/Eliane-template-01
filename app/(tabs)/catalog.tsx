@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,20 +19,22 @@ const priceOptions = ["Todos", "Até R$ 180", "R$ 180–250", "Acima de R$ 250"]
 
 export default function CatalogScreen() {
   const params = useLocalSearchParams<{ category?: string }>();
+  const routeCategory = typeof params.category === "string" && categories.includes(params.category) ? params.category : "Todos";
+  return <CatalogContent key={routeCategory} initialCategory={routeCategory} />;
+}
+
+function CatalogContent({ initialCategory }: { initialCategory: string }) {
   const searchRef = useRef<TextInput>(null);
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = catalogCardWidth(screenWidth);
   const { cartCount, isFavorite, toggleFavorite } = useStore();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(typeof params.category === "string" ? params.category : "Todos");
+  const [category, setCategory] = useState(initialCategory);
   const [priceFilter, setPriceFilter] = useState("Todos");
   const [selectedColor, setSelectedColor] = useState("Todos");
   const [selectedSize, setSelectedSize] = useState("Todos");
   const [sortMode, setSortMode] = useState<"relevance" | "price-asc" | "price-desc">("relevance");
   const [showAdvanced, setShowAdvanced] = useState(false);
-  useEffect(() => {
-    if (typeof params.category === "string" && categories.includes(params.category)) setCategory(params.category);
-  }, [params.category]);
 
   const filtered = useMemo(() => {
     const result = products.filter((product) => {
