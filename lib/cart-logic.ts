@@ -20,6 +20,30 @@ export function getCartAdditionStatus(cart: readonly CartLine[], product: Catalo
   return cart.length >= MAX_CART_LINES ? 'cart-full' : 'added';
 }
 
+/**
+ * Valida a estrutura persistida antes de sanear seus itens. Dados ausentes no
+ * primeiro acesso são legítimos; conteúdo inválido não deve ser sobrescrito
+ * por uma seleção vazia.
+ */
+export function parsePersistedSelection(
+  raw: string | null,
+  catalog: readonly CatalogItem[],
+): ReturnType<typeof restoreSelection> {
+  if (raw === null) return { favorites: [], cart: [] };
+  if (!raw.length || raw.length > MAX_STORED_CHARS) {
+    throw new Error("Seleção local inválida ou muito grande");
+  }
+  const data: unknown = JSON.parse(raw);
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error("Formato de seleção local inválido");
+  }
+  const selection = data as Record<string, unknown>;
+  if (!Array.isArray(selection.favorites) || !Array.isArray(selection.cart)) {
+    throw new Error("Campos da seleção local inválidos");
+  }
+  return restoreSelection(raw, catalog);
+}
+
 export function restoreSelection(raw: string | null, catalog: readonly CatalogItem[]): { favorites: string[]; cart: CartLine[] } {
   if (!raw || raw.length > MAX_STORED_CHARS) return { favorites: [], cart: [] };
   try {

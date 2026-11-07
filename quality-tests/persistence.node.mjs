@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createLatestWriteQueue, readStoredSelection } from "../lib/persistence.ts";
+import { parsePersistedSelection } from "../lib/cart-logic.ts";
 
 test("gravações concorrentes são serializadas e a seleção mais recente prevalece", async () => {
   const writes = [];
@@ -62,4 +63,28 @@ test("leitura bem-sucedida mantém o conteúdo original e valida a seleção", a
 test("uma falha ao interpretar dados é tratada como leitura não confiável", async () => {
   const state = await readStoredSelection(async () => "{json", (raw) => JSON.parse(raw));
   assert.deepEqual(state, { ok: false });
+});
+
+test("dados salvos corrompidos ou em estrutura incorreta não são restaurados nem sobrescritos", async () => {
+  const catalog = [{ id: "vestido-viva", price: 189.9, sizes: ["38", "40"] }];
+  for (const raw of ['{json', '', 'null', '[]', '{"cart":"incorreto","favorites":[]}', '{"cart":[],"favorites":null}', 'x'.repeat(200_001)]) {
+    const result = await readStoredSelection(async () => raw, (saved) => parsePersistedSelection(saved, catalog));
+    assert.deepEqual(result, { ok: false }, "falha em " + raw.slice(0, 30));
+  }
+});
+
+test("primeiro acesso sem dados continua válido; dados antigos válidos são normalizados", () => {
+  const catalog = [{ id: "vestido-viva", price: 189.9, sizes: ["38", "40"] }];
+  assert.deepEqual(parsePersistedSelection(null, catalog), { favorites: [], cart: [] });
+  const input = JSON.stringify({ favorites: ["vestido-viva", "removido"], cart: [{ productId: "vestido-viva", size: "38", quantity: 2 }] });
+  assert.deepEqual(parsePersistedSelection(input, catalog), { favorites: ["vestido-viva"], cart: [{ productId: "vestido-viva", size: "38", quantity: 2 }] });
+});
+
+test("estrutura válida com itens descartados é saneada, sem apagar toda a seleção", () => {
+  const catalog = [{ id: "vestido-viva", price: 189.9, sizes: ["38", "40"] }];
+  const input = JSON.stringify({ favorites: ["vestido-viva"], cart: [
+    { productId: "vestido-viva", size: "99", quantity: 2 },
+    { productId: "vestido-viva", size: "38", quantity: 3 }
+  ] });
+  assert.deepEqual(parsePersistedSelection(input, catalog), { favorites: ["vestido-viva"], cart: [{ productId: "vestido-viva", size: "38", quantity: 3 }] });
 });
