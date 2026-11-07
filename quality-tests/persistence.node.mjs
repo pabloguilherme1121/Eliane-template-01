@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createLatestWriteQueue } from "../lib/persistence.ts";
+import { createLatestWriteQueue, readStoredSelection } from "../lib/persistence.ts";
 
 test("gravações concorrentes são serializadas e a seleção mais recente prevalece", async () => {
   const writes = [];
@@ -47,4 +47,19 @@ test("uma falha de escrita é relatada e não bloqueia a seleção seguinte", as
   assert.deepEqual(writes, ["falha", "recuperado"]);
   assert.equal(errors.length, 1);
   assert.match(String(errors[0]), /sem espaço/);
+});
+
+test("falha ao ler armazenamento impede interpretar o vazio como seleção carregada", async () => {
+  const state = await readStoredSelection(async () => { throw new Error("armazenamento indisponível"); }, () => ({ cart: [], favorites: [] }));
+  assert.deepEqual(state, { ok: false });
+});
+
+test("leitura bem-sucedida mantém o conteúdo original e valida a seleção", async () => {
+  const state = await readStoredSelection(async () => '{"favorites":["vestido-viva"]}', (raw) => JSON.parse(raw));
+  assert.deepEqual(state, { ok: true, selection: { favorites: ["vestido-viva"] } });
+});
+
+test("uma falha ao interpretar dados é tratada como leitura não confiável", async () => {
+  const state = await readStoredSelection(async () => "{json", (raw) => JSON.parse(raw));
+  assert.deepEqual(state, { ok: false });
 });
