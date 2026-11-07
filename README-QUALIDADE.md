@@ -115,3 +115,21 @@ Esta rodada melhora a usabilidade sem mudar preços, pedidos demonstrativos ou i
 - Testes de regressão simulam gravação concorrente, seleção mais recente, erro de escrita, falha de leitura, restauração válida e URL de WhatsApp.
 - Gate GitHub Actions: `npm run test:logic`, `pnpm check`, `pnpm lint`, `pnpm test`, exportação estática e verificação das rotas.
 - **Não substitui** inspeção visual de 320/390 px, Android físico, validação de fotografias e homologação comercial.
+
+## Atualização V8 (07/11/2026)
+
+### Proteção contra dados locais corrompidos
+
+- A recuperação distingue **ausência de dados** (primeiro uso) de **JSON salvo corrompido** ou estrutura incompatível.
+- Somente seleção com arrays `favorites` e `cart` é restaurada; itens individuais inválidos continuam sendo descartados com segurança pelas regras da sacola.
+- Se o conteúdo local não puder ser interpretado, a leitura é tratada como falha e a sessão não regrava a chave original. Assim, um estado vazio não substitui automaticamente os dados anteriores.
+- Novos testes de regressão cobrem JSON quebrado, estrutura incompatível, limite de caracteres, primeiro acesso e saneamento de itens válidos.
+
+### Mobile
+
+- O banner de aviso considera a `safe area` superior, respeitando o recorte do aparelho sem ficar acima da margem mínima existente.
+
+### Limites
+
+- A mensagem de erro não é recuperação automática do conteúdo original: se os dados já estiverem inválidos, será necessário lidar com eles numa etapa apropriada.
+- O CI verifica TypeScript, lint, testes, exportação web e rotas; **não substitui** a inspeção visual em 320/390 px, o teste em Android físico ou fotografias reais.
