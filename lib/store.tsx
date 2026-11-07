@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 
 import { products, type Product } from "@/lib/catalog";
 import { addCartLine, calculateSubtotal, getCartAdditionStatus, restoreSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
+import { createLatestWriteQueue, readStoredSelection } from "@/lib/persistence";
 
 type StoreContextValue = {
   hydrated: boolean;
@@ -12,12 +13,14 @@ type StoreContextValue = {
   cartCount: number;
   subtotal: number;
   notice: string | null;
+  storageWarning: string | null;
   toggleFavorite: (productId: string) => void;
   isFavorite: (productId: string) => boolean;
   addToCart: (product: Product, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   removeFromCart: (productId: string, size: string) => void;
   dismissNotice: () => void;
+  dismissStorageWarning: () => void;
 };
 
 const STORAGE_KEY = "eliane-fashion-store-v1";
@@ -26,30 +29,41 @@ const StoreContext = createContext<StoreContextValue | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const cartRef = useRef<CartLine[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
+  const [persistSelection] = useState(() => createLatestWriteQueue(
+    (snapshot) => AsyncStorage.setItem(STORAGE_KEY, snapshot),
+    () => setNotice("Não foi possível salvar sua seleção neste momento."),
+  ));
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (!raw) return;
-        const saved = restoreSelection(raw, products);
-        setFavorites(saved.favorites);
-        cartRef.current = saved.cart;
-        setCart(saved.cart);
-      })
-      .catch(() => setNotice("Não foi possível restaurar sua sacola agora."))
-      .finally(() => setHydrated(true));
+    let cancelled = false;
+    void readStoredSelection(
+      () => AsyncStorage.getItem(STORAGE_KEY),
+      (raw) => restoreSelection(raw, products),
+    ).then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        setFavorites(result.selection.favorites);
+        cartRef.current = result.selection.cart;
+        setCart(result.selection.cart);
+        setStorageReady(true);
+      } else {
+        setStorageWarning("Não foi possível acessar seus itens salvos. Alterações desta sessão não serão gravadas para proteger os dados anteriores.");
+      }
+      setHydrated(true);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ favorites, cart })).catch(() => {
-      setNotice("Não foi possível salvar sua seleção neste momento.");
-    });
-  }, [cart, favorites, hydrated]);
+    if (!hydrated || !storageReady) return;
+    void persistSelection(JSON.stringify({ favorites, cart }));
+  }, [cart, favorites, hydrated, storageReady, persistSelection]);
 
   useEffect(() => {
     if (!notice) return;
@@ -112,14 +126,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cartCount,
       subtotal,
       notice,
+      storageWarning,
       toggleFavorite,
       isFavorite: (productId) => favorites.includes(productId),
       addToCart,
       updateQuantity,
       removeFromCart,
       dismissNotice: () => setNotice(null),
+      dismissStorageWarning: () => setStorageWarning(null),
     };
-  }, [cart, favorites, hydrated, notice]);
+  }, [cart, favorites, hydrated, notice, storageWarning]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
