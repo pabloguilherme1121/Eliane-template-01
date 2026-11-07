@@ -98,3 +98,20 @@ Esta rodada melhora a usabilidade sem mudar preços, pedidos demonstrativos ou i
 - **Testes de regressão:** novo caso para total por linha, incluindo valores inválidos e limite técnico de quantidade.
 
 **Limite da validação:** os checks automáticos verificam regras, tipos, lint, Vitest e exportação web, mas não substituem a inspeção visual em 320/390 px ou os testes em Android físico. A sacola apenas prepara consultas pelo WhatsApp e não reserva estoque.
+
+## Atualização V7 (07/11/2026)
+
+### Persistência local
+- Uma fila sequencial evita gravações concorrentes do mesmo registro de favoritos/sacola. Enquanto uma gravação está em andamento, a fila mantém somente o estado mais recente em espera.
+- Se a leitura inicial falhar, nenhuma seleção vazia será gravada por engano sobre dados existentes. O aplicativo continua em modo de sessão, mas não persiste novas mudanças até conseguir ler o armazenamento em uma sessão posterior.
+- O aviso de falha de leitura é exibido até ser dispensado, sem fingir que o armazenamento foi recuperado. Leituras canceladas após desmontagem do componente não atualizam a interface.
+- A chave local `eliane-fashion-store-v1` e o formato de dados permanecem compatíveis com a V6.
+
+### Atendimento
+- Link de consulta do WhatsApp separado em função pura com validação do número e codificação de caracteres reservados.
+- Falhas ao abrir o aplicativo ou navegador são capturadas e comunicadas ao usuário, sem tratar a consulta como pedido confirmado.
+
+### Verificação
+- Testes de regressão simulam gravação concorrente, seleção mais recente, erro de escrita, falha de leitura, restauração válida e URL de WhatsApp.
+- Gate GitHub Actions: `npm run test:logic`, `pnpm check`, `pnpm lint`, `pnpm test`, exportação estática e verificação das rotas.
+- **Não substitui** inspeção visual de 320/390 px, Android físico, validação de fotografias e homologação comercial.
