@@ -12,6 +12,11 @@ import { openWhatsApp } from "@/lib/contact";
 import { productDetailImageHeight } from "@/lib/layout";
 import { useStore } from "@/lib/store";
 
+/** Gera URLs diretas para todos os produtos conhecidos no modo web estático. */
+export function generateStaticParams() {
+  return products.map(({ id }) => ({ id }));
+}
+
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return <ProductDetailContent key={id} id={id} />;
