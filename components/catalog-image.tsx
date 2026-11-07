@@ -1,5 +1,5 @@
 import { Image, type ImageContentFit } from "expo-image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, Text, View, type ImageStyle, type StyleProp } from "react-native";
 import { colors } from "@/constants/tokens";
 import { canRequestCatalogImage } from "@/lib/image-policy";
@@ -17,9 +17,8 @@ export function CatalogImage({
   label?: string;
   compact?: boolean;
 }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [uri]);
-  if (failed || !canRequestCatalogImage(uri)) {
+  const [failedUri, setFailedUri] = useState<string | null>(null);
+  if (failedUri === uri || !canRequestCatalogImage(uri)) {
     if (variant === "hero") {
       return <View style={[styles.heroPlaceholder, style]} accessibilityLabel="Imagem da campanha em atualização">
         <View style={styles.heroCircle} />
@@ -36,7 +35,7 @@ export function CatalogImage({
       </>}
     </View>;
   }
-  return <Image source={uri} style={style} contentFit={contentFit} cachePolicy="memory-disk" priority={priority} transition={transition} onError={() => setFailed(true)} />;
+  return <Image source={uri} style={style} contentFit={contentFit} cachePolicy="memory-disk" priority={priority} transition={transition} onError={() => setFailedUri(uri)} />;
 }
 
 const styles = StyleSheet.create({
