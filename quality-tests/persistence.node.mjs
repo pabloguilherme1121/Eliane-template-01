@@ -88,3 +88,21 @@ test("estrutura válida com itens descartados é saneada, sem apagar toda a sele
   ] });
   assert.deepEqual(parsePersistedSelection(input, catalog), { favorites: ["vestido-viva"], cart: [{ productId: "vestido-viva", size: "38", quantity: 3 }] });
 });
+
+test("aviso de gravação é liberado após escrita posterior bem-sucedida", async () => {
+  let warning = false;
+  const attempts = [];
+  const save = createLatestWriteQueue(
+    async (snapshot) => {
+      attempts.push(snapshot);
+      if (snapshot === "falha") throw new Error("armazenamento lotado");
+    },
+    () => { warning = true; },
+    () => { warning = false; }
+  );
+  await save("falha");
+  assert.equal(warning, true);
+  await save("nova seleção");
+  assert.equal(warning, false);
+  assert.deepEqual(attempts, ["falha", "nova seleção"]);
+});

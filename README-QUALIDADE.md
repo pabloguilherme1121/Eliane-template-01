@@ -133,3 +133,12 @@ Esta rodada melhora a usabilidade sem mudar preços, pedidos demonstrativos ou i
 
 - A mensagem de erro não é recuperação automática do conteúdo original: se os dados já estiverem inválidos, será necessário lidar com eles numa etapa apropriada.
 - O CI verifica TypeScript, lint, testes, exportação web e rotas; **não substitui** a inspeção visual em 320/390 px, o teste em Android físico ou fotografias reais.
+
+## Atualização V9 (07/11/2026)
+
+- **Favoritos com toques rápidos:** o estado é atualizado a partir de uma referência sincronizada, evitando que dois toques consecutivos anunciem a mesma operação. A função pura de alternância é coberta por testes de repetição e imutabilidade.
+- **Falha de gravação:** erro ao salvar a seleção agora gera aviso persistente. A mensagem só é retirada automaticamente após uma gravação posterior bem-sucedida; a fila de gravação continua sequencial.
+- **Comunicação:** o perfil não afirma que todos os dados foram guardados quando o armazenamento local pode estar indisponível.
+- **Compatibilidade:** formato `eliane-fashion-store-v1` preservado. Sem mudanças em catálogo, estoque, preços, autenticação ou checkout.
+
+A validação automática abrange testes de lógica, TypeScript, lint, Vitest, exportação Expo Web e rotas estáticas. Não substitui inspeção visual em 320/390 px nem homologação em Android físico. As fotografias comerciais continuam pendentes.

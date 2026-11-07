@@ -15,7 +15,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.topbar}><BrandMark compact /><Ionicons name="settings-outline" size={21} color={colors.ink} /></View>
-        <View style={styles.profileHead}><View style={styles.avatar}><Text style={styles.avatarText}>EF</Text></View><View style={styles.identity}><Text style={styles.greeting}>Seu espaço</Text><Text style={styles.email}>Favoritos e sacola guardados neste dispositivo</Text></View></View>
+        <View style={styles.profileHead}><View style={styles.avatar}><Text style={styles.avatarText}>EF</Text></View><View style={styles.identity}><Text style={styles.greeting}>Seu espaço</Text><Text style={styles.email}>Sua seleção fica neste dispositivo quando o armazenamento está disponível</Text></View></View>
         <View style={styles.stats}><View><Text style={styles.statNumber}>{hydrated ? favorites.length : "…"}</Text><Text style={styles.statLabel}>favoritos</Text></View><View style={styles.statLine} /><View><Text style={styles.statNumber}>{hydrated ? cartCount : "…"}</Text><Text style={styles.statLabel}>na sacola</Text></View></View>
         <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Pedidos e atendimento</Text></View>
         <View style={styles.profileInfo}><Ionicons name="information-circle-outline" size={22} color={colors.wine} /><Text style={styles.profileInfoText}>O histórico de pedidos ainda não está conectado a uma conta real. Consulte o atendimento para verificar uma compra.</Text></View>

@@ -5,6 +5,7 @@
 export function createLatestWriteQueue(
   write: (snapshot: string) => Promise<void>,
   onError: (error: unknown) => void = () => {},
+  onSuccess: () => void = () => {},
 ): (snapshot: string) => Promise<void> {
   let pending: string | undefined;
   let running: Promise<void> | null = null;
@@ -19,6 +20,7 @@ export function createLatestWriteQueue(
             pending = undefined;
             try {
               await write(next);
+              onSuccess();
             } catch (error) {
               onError(error);
             }
