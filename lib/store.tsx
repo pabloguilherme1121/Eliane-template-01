@@ -3,8 +3,8 @@ import { usePathname } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { products, type Product } from "@/lib/catalog";
-import { addCartLine, calculateSubtotal, getCartAdditionStatus, restoreSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
-import { createLatestWriteQueue, readStoredSelection } from "@/lib/persistence";
+import { addCartLine, calculateSubtotal, getCartAdditionStatus, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
+import { createLatestWriteQueue, readStoredSelection, parsePersistedSelection } from "@/lib/persistence";
 
 type StoreContextValue = {
   hydrated: boolean;
@@ -44,7 +44,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     void readStoredSelection(
       () => AsyncStorage.getItem(STORAGE_KEY),
-      (raw) => restoreSelection(raw, products),
+      (raw) => parsePersistedSelection(raw, products),
     ).then((result) => {
       if (cancelled) return;
       if (result.ok) {
