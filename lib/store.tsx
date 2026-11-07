@@ -3,8 +3,8 @@ import { usePathname } from "expo-router";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { products, type Product } from "@/lib/catalog";
-import { addCartLine, calculateSubtotal, getCartAdditionStatus, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
-import { createLatestWriteQueue, readStoredSelection, parsePersistedSelection } from "@/lib/persistence";
+import { addCartLine, calculateSubtotal, getCartAdditionStatus, parsePersistedSelection, setCartLineQuantity, type CartLine } from "@/lib/cart-logic";
+import { createLatestWriteQueue, readStoredSelection } from "@/lib/persistence";
 
 type StoreContextValue = {
   hydrated: boolean;
