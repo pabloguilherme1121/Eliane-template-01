@@ -66,12 +66,17 @@ export function setCartLineQuantity(cart: readonly CartLine[], productId: string
     : line);
 }
 
+/** Total da linha em reais, arredondado em centavos. Limite técnico não representa estoque. */
+export function calculateCartLineTotal(line: CartLine, item: CatalogItem | undefined): number {
+  if (!item || !item.sizes.includes(line.size) || !validQuantity(line.quantity) || !Number.isFinite(item.price) || item.price < 0) return 0;
+  return (Math.round(item.price * 100) * clampQuantity(line.quantity)) / 100;
+}
+
 export function calculateSubtotal(cart: readonly CartLine[], catalog: readonly CatalogItem[]): number {
   const byId = new Map(catalog.map((product) => [product.id, product]));
   const cents = cart.reduce((sum, line) => {
     const item = byId.get(line.productId);
-    if (!item || !item.sizes.includes(line.size) || !validQuantity(line.quantity) || !Number.isFinite(item.price) || item.price < 0) return sum;
-    return sum + Math.round(item.price * 100) * clampQuantity(line.quantity);
+    return sum + Math.round(calculateCartLineTotal(line, item) * 100);
   }, 0);
   return cents / 100;
 }
@@ -81,7 +86,7 @@ export function buildOrderMessage(cart: readonly CartLine[], catalog: readonly C
   const lines = cart.flatMap((line) => {
     const item = byId.get(line.productId);
     if (!item || !item.sizes.includes(line.size) || !validQuantity(line.quantity)) return [];
-    const itemTotal = (Math.round(item.price * 100) * clampQuantity(line.quantity)) / 100;
+    const itemTotal = calculateCartLineTotal(line, item);
     const price = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(itemTotal);
     return [`• ${clampQuantity(line.quantity)}x ${item.name ?? item.id} (tam. ${line.size}) — ${price}`];
   });

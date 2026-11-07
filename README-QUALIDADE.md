@@ -89,3 +89,12 @@ Esta rodada melhora a usabilidade sem mudar preços, pedidos demonstrativos ou i
 **Validação:** GitHub Actions executa os testes de lógica e a suíte com TypeScript, lint e Vitest. Na primeira execução de V5, os 24 testes de lógica e as etapas TypeScript/lint passaram; verificar o status do mesmo commit no GitHub antes de integrar.
 
 **Pendente:** testes visuais reais no navegador e Android físico, fotografias autorizadas, dados comerciais verificados e autenticação de qualquer painel destinado à operação real. Publicar o código no GitHub não constitui publicação da loja.
+
+## Atualização V6 (07/11/2026)
+
+- **Sacola, favoritos e perfil:** telas não apresentam estado vazio definitivo nem métricas zeradas enquanto a seleção local ainda está sendo recuperada.
+- **Clareza dos valores:** linhas da sacola com mais de uma unidade exibem o preço unitário e o total daquela linha. O cálculo valida tamanho, preço e quantidade e arredonda em centavos.
+- **Responsividade:** controles de quantidade e remoção podem quebrar linha em telas estreitas; revisão do pedido pode ser expandida ou recolhida, com estado acessível.
+- **Testes de regressão:** novo caso para total por linha, incluindo valores inválidos e limite técnico de quantidade.
+
+**Limite da validação:** os checks automáticos verificam regras, tipos, lint, Vitest e exportação web, mas não substituem a inspeção visual em 320/390 px ou os testes em Android físico. A sacola apenas prepara consultas pelo WhatsApp e não reserva estoque.

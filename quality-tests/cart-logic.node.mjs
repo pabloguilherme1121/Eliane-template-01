@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { restoreSelection, addCartLine, setCartLineQuantity, calculateSubtotal, buildOrderMessage, getCartAdditionStatus, MAX_LINE_QUANTITY } from '../lib/cart-logic.ts';
+import { restoreSelection, addCartLine, setCartLineQuantity, calculateSubtotal, calculateCartLineTotal, buildOrderMessage, getCartAdditionStatus, MAX_LINE_QUANTITY } from '../lib/cart-logic.ts';
 
 const inventory = [
   { id: 'vestido-viva', name: 'Vestido Viva', sizes: ['38', '40'], price: 189.9 },
@@ -72,4 +72,13 @@ test('informação de limite de sacola é fiel ao resultado da inclusão', () =>
   assert.equal(getCartAdditionStatus(atLineLimit,inventory[0],'40'),'added');
   const atCartLimit=Array.from({length:100}, (_,i)=>({productId:'p'+i,size:'M',quantity:1}));
   assert.equal(getCartAdditionStatus(atCartLimit,inventory[0],'38'),'cart-full');
+});
+
+test('total de cada linha arredonda em centavos, sem multiplicar valores inválidos', () => {
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'38',quantity:3},inventory[0]),569.7);
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'38',quantity:1},undefined),0);
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'XX',quantity:2},inventory[0]),0);
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'38',quantity:1.5},inventory[0]),0);
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'38',quantity:100},inventory[0]),3798);
+  assert.equal(calculateCartLineTotal({productId:'vestido-viva',size:'38',quantity:2},{...inventory[0],price:Infinity}),0);
 });
