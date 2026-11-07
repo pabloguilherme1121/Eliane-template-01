@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { CatalogImage } from "@/components/catalog-image";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,15 +13,15 @@ import { useStore } from "@/lib/store";
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  return <ProductDetailContent key={id} id={id} />;
+}
+
+function ProductDetailContent({ id }: { id: string }) {
   const product = useMemo(() => products.find((item) => item.id === id), [id]);
   const { cartCount, isFavorite, toggleFavorite, addToCart } = useStore();
   const gallery = product?.images ?? (product ? [product.image] : []);
   const [selectedImage, setSelectedImage] = useState(0);
   const [size, setSize] = useState(product?.sizes[0] ?? "");
-  useEffect(() => {
-    setSelectedImage(0);
-    setSize(product?.sizes[0] ?? "");
-  }, [product?.id]);
   if (!product) return <SafeAreaView style={styles.safe}><View style={styles.notFound}><Text style={styles.notFoundTitle}>Peça não encontrada</Text><Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Voltar à loja" style={styles.backAction}><Text style={styles.backLink}>Voltar</Text></Pressable></View></SafeAreaView>;
 
   return (
