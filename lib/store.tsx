@@ -13,12 +13,14 @@ type StoreContextValue = {
   cartCount: number;
   subtotal: number;
   notice: string | null;
+  storageWarning: string | null;
   toggleFavorite: (productId: string) => void;
   isFavorite: (productId: string) => boolean;
   addToCart: (product: Product, size: string) => void;
   updateQuantity: (productId: string, size: string, quantity: number) => void;
   removeFromCart: (productId: string, size: string) => void;
   dismissNotice: () => void;
+  dismissStorageWarning: () => void;
 };
 
 const STORAGE_KEY = "eliane-fashion-store-v1";
@@ -32,6 +34,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const cartRef = useRef<CartLine[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
   const [persistSelection] = useState(() => createLatestWriteQueue(
     (snapshot) => AsyncStorage.setItem(STORAGE_KEY, snapshot),
     () => setNotice("Não foi possível salvar sua seleção neste momento."),
@@ -50,7 +53,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCart(result.selection.cart);
         setStorageReady(true);
       } else {
-        setNotice("Falha ao ler seus itens salvos. Alterações desta sessão não serão gravadas.");
+        setStorageWarning("Não foi possível acessar seus itens salvos. Alterações desta sessão não serão gravadas para proteger os dados anteriores.");
       }
       setHydrated(true);
     });
@@ -123,14 +126,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cartCount,
       subtotal,
       notice,
+      storageWarning,
       toggleFavorite,
       isFavorite: (productId) => favorites.includes(productId),
       addToCart,
       updateQuantity,
       removeFromCart,
       dismissNotice: () => setNotice(null),
+      dismissStorageWarning: () => setStorageWarning(null),
     };
-  }, [cart, favorites, hydrated, notice]);
+  }, [cart, favorites, hydrated, notice, storageWarning]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
